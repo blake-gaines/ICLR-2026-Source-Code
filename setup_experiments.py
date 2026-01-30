@@ -5,7 +5,6 @@ from itertools import product
 
 import numpy as np
 import torch
-import torch.nn as nn
 from sklearn.metrics import classification_report
 from tqdm.auto import tqdm
 
@@ -139,22 +138,6 @@ def train_progress_exps(n_saves=20):
 
         model = get_model(model_name)
         model.to("cuda" if torch.cuda.is_available() else "cpu")
-        first = True
-        for layer in model.layers.values():
-            if hasattr(layer, "bias"):
-                if first:
-                    first = False
-                    # nn.init.uniform_(layer.bias, -10, 10)
-                    nn.init.zeros_(layer.bias)
-                    nn.init.uniform_(layer.weight, a=-1e-5, b=1e-4)
-                    # nn.init.sparse_(layer.weight, sparsity=0.99, std=1e-5)
-                    # nn.init.orthogonal_(layer.weight, gain=1)
-                else:
-                    # nn.init.uniform_(layer.bias, -10, 10)
-                    nn.init.zeros_(layer.bias)
-                    # nn.init.uniform_(layer.weight, a=-1e-6, b=1e-6)
-                    # nn.init.sparse_(layer.weight, sparsity=0.99, std=0.01)
-                    # nn.init.orthogonal_(layer.weight, gain=1)
 
         train_kwargs["verbose"] = train_kwargs.get("verbose", 1)
 
