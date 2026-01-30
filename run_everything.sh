@@ -5,23 +5,22 @@ set -e
 # # # conda/mamba/micromamba create -n poly -c conda-forge python=3.13 -y
 # # # conda/mamba/micromamba activate poly
 
-## Ensure Python is on path
-which python
-if [ $? -ne 0 ]; then
+# The 'if' block prevents set -e from exiting on failure
+if ! command -v python >/dev/null 2>&1; then
     echo "Python must be on path"
     exit 1
 fi
 
-## Ensure python version is at least 3.13
-python --version
-if [ $(python --version | cut -d' ' -f2 | cut -d'.' -f1) -lt 3 ] || [ $(python --version | cut -d' ' -f2 | cut -d'.' -f2) -lt 13 ]; then
-    echo "Python version must be at least 3.13"
+## 1. Ensure Python version is at least 3.13
+if ! python -c "import sys; sys.exit(0 if sys.version_info >= (3, 13) else 1)" >/dev/null 2>&1; then
+    echo "Error: Python version must be at least 3.13"
+    echo "Found: $(python --version)"
     exit 1
-fi         
+fi
 
-# ## Ensure torch is installed and >= 2.3
-if ! python -c "import torch; assert torch.__version__ >= '2.3.0'"; then
-    echo "Torch version must be at least 2.3.0"
+## 2. Ensure Torch is installed and >= 2.3.0
+if ! python -c "import torch; from pathlib import Path; exit(0 if torch.__version__ >= '2.3.0' else 1)" >/dev/null 2>&1; then
+    echo "Error: Torch version must be at least 2.3.0"
     exit 1
 fi
 
