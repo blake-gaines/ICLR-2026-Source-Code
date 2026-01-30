@@ -68,55 +68,42 @@ def get_diameter_ub(G, k=50, position=None, **kwargs):
     return min_ub
 
 
-if __name__ == "__main__":
-    import sys
-    import os
-    import multiprocessing as mp
+PROGRESS_BAR_WIDTH = 140
+
+
+def compute_diameter_bounds(file):
+    """Process a single file to compute diameter bounds. Must be at module level for multiprocessing."""
     import pickle
 
-    progress_bar_width = 140
-
-    manager = mp.Manager()
-    position_counter = manager.Value("i", 1)
-    worker_positions = manager.dict()
-    position_lock = manager.Lock()
-
-    def get_worker_position():
-        """Assign a unique position to each worker process."""
-        process_name = mp.current_process().name
-        if process_name not in worker_positions:
-            with position_lock:
-                if process_name not in worker_positions:
-                    pos = position_counter.value
-                    position_counter.value += 1
-                    worker_positions[process_name] = pos
-        return worker_positions[process_name]
-
-    def compute_diameter_bounds(file):
-        try:
-            with open(file, "rb") as f:
-                result = pickle.load(f)
-        except Exception as e:
-            return {
-                "file": file,
-                "error": f"Unexpected error loading file: {type(e).__name__}: {e}",
-                "skipped": True,
-            }
-        try:
-            if "Diameter LB" in result and "Diameter UB" in result:
-                return result
-
-            G = result["Dual Graph"]
-
-            result["Diameter LB"] = get_diameter_lb(G, position=None, ncols=progress_bar_width, disable=True)
-            result["Diameter UB"] = get_diameter_ub(G, position=None, ncols=progress_bar_width, disable=True)
-
-            with open(file, "wb") as f:
-                pickle.dump(result, f)
-
+    try:
+        with open(file, "rb") as f:
+            result = pickle.load(f)
+    except Exception as e:
+        return {
+            "file": file,
+            "error": f"Unexpected error loading file: {type(e).__name__}: {e}",
+            "skipped": True,
+        }
+    try:
+        if "Diameter LB" in result and "Diameter UB" in result:
             return result
-        except Exception as e:
-            return {"file": file, "error": f"Unexpected error: {type(e).__name__}: {e}", "skipped": True}
+
+        G = result["Dual Graph"]
+
+        result["Diameter LB"] = get_diameter_lb(G, position=None, ncols=PROGRESS_BAR_WIDTH, disable=True)
+        result["Diameter UB"] = get_diameter_ub(G, position=None, ncols=PROGRESS_BAR_WIDTH, disable=True)
+
+        with open(file, "wb") as f:
+            pickle.dump(result, f)
+
+        return result
+    except Exception as e:
+        return {"file": file, "error": f"Unexpected error: {type(e).__name__}: {e}", "skipped": True}
+
+
+if __name__ == "__main__":
+    import os
+    import multiprocessing as mp
 
     log_dirs = sys.argv[1:] if len(sys.argv) > 2 else ["results/"]
 
@@ -147,7 +134,7 @@ if __name__ == "__main__":
                 total=len(all_files),
                 desc="Computing Diameter Bounds",
                 position=0,
-                ncols=progress_bar_width,
+                ncols=PROGRESS_BAR_WIDTH,
                 bar_format="{l_bar}|{bar}| {n_fmt}/{total_fmt}{postfix}",
             )
         )
