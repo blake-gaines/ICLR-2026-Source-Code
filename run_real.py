@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 
 from relucent import Complex
 
+
 def main():
     torch.random.manual_seed(0)
     np.random.seed(0)
@@ -55,7 +56,7 @@ def main():
 
         cplx = Complex(model)
 
-        bfs_limit = 8000000
+        bfs_limit = 4000000
         point_limit = 10000
         cplx.bfs(max_polys=bfs_limit, nworkers=64)
         num_bfs_polys = len(cplx)
@@ -107,7 +108,6 @@ def main():
             else df["p"].map(lambda x: x._finite)
         )
         df["# Faces"] = df["p"].map(lambda x: len(x._shis) if x._shis is not None else np.nan)
-        columns = df.columns
 
         poly_df = df.copy().loc[:num_bfs_polys]
 
@@ -140,6 +140,7 @@ def main():
 
         print("Done")
         print(f"{name} Time: {time() - start_time:.2f} seconds")
+
 
 if __name__ == "__main__":
     main()
