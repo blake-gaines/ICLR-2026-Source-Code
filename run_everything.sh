@@ -2,8 +2,11 @@
 set -e
 
 ## Set up environment
-# # # conda/mamba/micromamba create -n poly -c conda-forge python=3.13 -y
-# # # conda/mamba/micromamba activate poly
+# conda/mamba/micromamba create -n poly -c conda-forge python=3.13 -y
+# conda/mamba/micromamba activate poly
+
+## Install PyTorch and TorchVision
+# pip install torch torchvision
 
 # The 'if' block prevents set -e from exiting on failure
 if ! command -v python >/dev/null 2>&1; then
