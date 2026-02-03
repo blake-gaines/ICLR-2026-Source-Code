@@ -1,11 +1,8 @@
-from time import time
-
 import numpy as np
 import pandas as pd
 import torch
-from complex import Complex
-from experiments import Experiment, ExperimentArray  # noqa
-from poly import Polyhedron
+from experiments import ExperimentArray
+from relucent import Polyhedron, Complex
 from tqdm.auto import tqdm
 
 torch.random.manual_seed(0)
@@ -14,8 +11,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 experiments = {
     "MNIST": "experiments/mnist_fc_Progress3",
-    "CH Reg": "experiments/california_housing_reg_Progress",
-    "CIFAR10": "experiments/cifar10_cnn_Progress",
+    # "CH Reg": "experiments/california_housing_reg_Progress",
+    # "CIFAR10": "experiments/cifar10_cnn_Progress",
 }
 
 ## For MNIST and CIFAR10, we split the networks into a feature extractor and classifier and analyze the cplx of the classifier
@@ -28,7 +25,6 @@ final_df = pd.DataFrame()
 
 for name, path in experiments.items():
     print("\n ======= Running Experiment:", name, "======= \n")
-    start_time = time()
     exps = ExperimentArray.load(path)
 
     for epoch, e in tqdm(exps.items(), total=len(exps), desc="Running Progress Experiments"):
@@ -40,11 +36,6 @@ for name, path in experiments.items():
             embedder, model = e.get_model(split_layer=split_layers[name], device=device)
         else:
             embedder, model = None, e.get_model(device=device)
-        # model = e.converted_model
-        cplx = Complex(model)
-
-        # print("\nEmbedder:\n", embedder)
-        # print("Model:\n", model)
 
         cplx = Complex(model)
 
@@ -52,20 +43,17 @@ for name, path in experiments.items():
         point_limit = 10000
         cplx.bfs(
             max_polys=bfs_limit,
-            nworkers=64,
             start=torch.ones(e.model.input_shape, device=device) * 2,
             get_volumes=False,
         )
         num_bfs_polys = len(cplx)
 
-        # print("Getting Data")
         data_points = [x[0].cpu() for i, x in enumerate(train_dataset) if i < point_limit]
         ys = [x[1].item() for i, x in enumerate(train_dataset) if i < point_limit]
         nunique = len(set(ys))
         if nunique == 2 and min(ys) == -1:
             ys = [0 if y == -1 else 1 for y in ys]
 
-        # print("Creating Dataframe")
         points_df = pd.DataFrame()
         points_df["Label"] = ys
         points, logits = [], []
@@ -82,19 +70,12 @@ for name, path in experiments.items():
 
         points_df["Logits"] = logits
         points_df = points_df.dropna()
-        # points_df["Logits"] = [model(embedder(x.to(device))).detach().cpu().numpy() for x in tqdm(data_points)] if embedder is not None else [model(x.to(device)).detach().cpu().numpy() for x in tqdm(data_points)]
+
         if nunique == 2:
             points_df["Prediction"] = points_df["Logits"].apply(lambda x: x[0][0] > 0)
         else:
             points_df["Prediction"] = [np.argmax(x) for x in points_df["Logits"]]
         points_df["Correct"] = points_df["Label"] == points_df["Prediction"]
-
-        pd.to_pickle(
-            pd.DataFrame({"p": cplx.index2poly, "index": range(len(cplx.index2poly))}).set_index("index"),
-            "whole_df.pkl",
-        )
-
-        pd.to_pickle(cplx, "cplx.pkl")
 
         point_polys = cplx.parallel_add(points, nworkers=32)
         points_df["p"] = point_polys
@@ -150,7 +131,4 @@ for name, path in experiments.items():
 
         del df
 
-        print("Done")
-        print(f"{name} Time: {time() - start_time:.2f} seconds")
-
-final_df.to_pickle(f"data_polys_{name}_Progress3.pkl")
+final_df.to_pickle(f"results/data_polys_{name}_Progress.pkl")

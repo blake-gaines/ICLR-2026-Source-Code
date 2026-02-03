@@ -46,6 +46,9 @@ python diameter_bounds.py
 ## Run experiments on the networks trained with real data
 python run_real.py
 
+## Run experiments on networks evolving over the course of training
+python run_prog.py
+
 ## Run the notebooks in the visualization folder to generate the plots from the paper
 $notebooks = Get-ChildItem -Path "notebooks\*.ipynb" -ErrorAction SilentlyContinue
 if ($notebooks) {

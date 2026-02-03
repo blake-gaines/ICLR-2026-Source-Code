@@ -172,8 +172,8 @@ def train_progress_exps(n_saves=20):
             print(f"  Test MSE: {exp.test_dataset.get_mse(exp.model)}")
             print(f"  Test R2: {exp.test_dataset.get_rsquared(exp.model)}")
 
-        exp_array.save_models(f"experiments/{model_name}_Progress3/")
-        exp_array.save(f"experiments/{model_name}_Progress3")
+        exp_array.save_models(f"experiments/{model_name}_Progress/")
+        exp_array.save(f"experiments/{model_name}_Progress")
 
 
 if __name__ == "__main__":
