@@ -122,9 +122,7 @@ def train_progress_exps(n_saves=20):
     print("\n\n ========= Training Progress Experiments =========\n\n")
 
     exps = [
-        ("mnist", "mnist_fc", {"epochs": 1, "lr": 0.01, "use_scheduler": False, "verbose": 0}),
-        ("california_housing_reg", "california_housing_reg", {"epochs": 1, "lr": 0.001, "verbose": 0}),
-        ("cifar10", "cifar10_cnn", {"epochs": 1, "lr": 0.01, "use_scheduler": False, "verbose": 0, "batch_size": 4}),
+        ("mnist", "mnist_fc", {"epochs": 1, "lr": 0.1, "use_scheduler": True, "verbose": 0}),
     ]
 
     for dataset_name, model_name, train_kwargs in exps:
@@ -138,6 +136,23 @@ def train_progress_exps(n_saves=20):
 
         model = get_model(model_name)
         model.to("cuda" if torch.cuda.is_available() else "cpu")
+
+        first = True
+        for layer in model.layers.values():
+            if hasattr(layer, "bias"):
+                if first:
+                    first = False
+                    # torch.nn.init.uniform_(layer.bias, -10, 10)
+                    torch.nn.init.zeros_(layer.bias)
+                    torch.nn.init.uniform_(layer.weight, a=-1e-5, b=1e-4)
+                    # torch.nn.init.sparse_(layer.weight, sparsity=0.99, std=1e-5)
+                    # torch.nn.init.orthogonal_(layer.weight, gain=1)
+                else:
+                    # torch.nn.init.uniform_(layer.bias, -10, 10)
+                    torch.nn.init.zeros_(layer.bias)
+                    # torch.nn.init.uniform_(layer.weight, a=-1e-6, b=1e-6)
+                    # torch.nn.init.sparse_(layer.weight, sparsity=0.99, std=0.01)
+                    # torch.nn.init.orthogonal_(layer.weight, gain=1)
 
         train_kwargs["verbose"] = train_kwargs.get("verbose", 1)
 
@@ -178,6 +193,6 @@ def train_progress_exps(n_saves=20):
 
 if __name__ == "__main__":
     os.makedirs("experiments", exist_ok=True)
-    train_synthetic_exps()
-    train_real_exps()
+    # train_synthetic_exps()
+    # train_real_exps()
     train_progress_exps()

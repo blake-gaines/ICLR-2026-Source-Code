@@ -10,7 +10,7 @@ torch.random.manual_seed(0)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 experiments = {
-    "MNIST": "experiments/mnist_fc_Progress3",
+    "MNIST": "experiments/mnist_fc_Progress",
     # "CH Reg": "experiments/california_housing_reg_Progress",
     # "CIFAR10": "experiments/cifar10_cnn_Progress",
 }
@@ -39,7 +39,7 @@ for name, path in experiments.items():
 
         cplx = Complex(model)
 
-        bfs_limit = 100000
+        bfs_limit = 1000000
         point_limit = 10000
         cplx.bfs(
             max_polys=bfs_limit,
